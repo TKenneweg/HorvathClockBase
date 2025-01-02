@@ -5,50 +5,46 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
 import os 
 import pickle
-
+from config import *
 
 class MethylationDataset(Dataset):
     def __init__(self, series_names, data_folder):
-        all_dicts = []
+        nsamples =0
         for series_id in series_names:
-            series_subfolder = os.path.join(data_folder, series_id)
+            series_subfolder = data_folder + "/" + series_id
+            pkl_files = [f for f in os.listdir(series_subfolder) if f.endswith(".pkl")]
+            nsamples += len(pkl_files)
+
+        X_data = np.zeros((nsamples, NUM_PROBES), dtype=np.float32)
+        y_data = np.zeros(nsamples, dtype=np.float32)
+        print(f"\n[INFO] Building X_data, y_data with {nsamples} samples, {NUM_PROBES} probes each.")
+
+        i = 0
+        for series_id in series_names:
+            series_subfolder = data_folder + "/" + series_id
             pkl_files = [f for f in os.listdir(series_subfolder) if f.endswith(".pkl")]
             for pkl_file in pkl_files:
                 with open(os.path.join(series_subfolder, pkl_file), "rb") as f:
                     sample_dict = pickle.load(f)
-                age = sample_dict.get("age", None)
-                if age is None or (isinstance(age, float) and np.isnan(age)):
-                    continue
-                all_dicts.append(sample_dict)
+                    X_data[i,:] = list(sample_dict.values())[:-1]
+                    y_data[i] = sample_dict["age"]
+                    i += 1
+            print(f"Loaded {len(pkl_files)} samples from {series_id}")
+            
 
-        # Derive probe keys
-        all_keys = list(all_dicts[0].keys())
-        all_keys.remove("age")
-
-        # Build X, y
-        num_samples = len(all_dicts)
-        num_probes = len(all_keys)
-        print(f"\n[INFO] Building X_data, y_data with {num_samples} samples, {num_probes} probes each.")
-
-        X_data = np.zeros((num_samples, num_probes), dtype=np.float32)
-        y_data = np.zeros(num_samples, dtype=np.float32)
-        for i, dct in enumerate(all_dicts):
-            for j, probe in enumerate(all_keys):
-                val = dct[probe]
-                X_data[i, j] = val if (val is not None and np.isfinite(val) and not np.isnan(val) and val >= 0 and val <=1) else 0.5
-            y_data[i] = dct["age"]
-
+            
         self.X = torch.tensor(X_data, dtype=torch.float32)
         self.y = torch.tensor(y_data, dtype=torch.float32)
-        print(self.X.shape, self.y.shape)
-        num_nans = torch.sum(torch.isnan(self.X))
-        invalid_entries = self.X[(self.X > 1) | (self.X < 0)]
-        print(f"Invalid entries in X (greater than 1 or smaller than 0): {invalid_entries}")
-        print(f"Number of NaN entries in X: {num_nans}")
-        print(self.X,self.y)
+
+        # print(self.X.shape, self.y.shape)
+        # num_nans = torch.sum(torch.isnan(self.X))
+        # invalid_entries = self.X[(self.X > 1) | (self.X < 0)]
+        # print(f"Invalid entries in X (greater than 1 or smaller than 0): {invalid_entries}")
+        # print(f"Number of NaN entries in X: {num_nans}")
+        # print(self.X,self.y)
 
     def __len__(self):
-        return len(self.X)
+        return len(self.y)
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]

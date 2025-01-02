@@ -4,14 +4,16 @@ import pickle
 import re
 
 import GEOparse
+import sys
 from config import *
+import numpy as np
 
 # Uncomment to suppress verbose DEBUG messages from GEOparse:
 # logging.getLogger("GEOparse").setLevel(logging.ERROR)
 
-def parse_age(gsm):
+def parse_age(gsm,divisor=1):
     """
-    Attempt to extract an age value from the sample metadata.
+    Attempt to extract an age value from the  sample metadata.
     This example looks at characteristics_ch1 lines for something like 'age: 57'.
     Adjust to match your exact metadata format.
     """
@@ -23,7 +25,7 @@ def parse_age(gsm):
         # We look for a pattern 'age: 57' or 'age=57' or 'Age: 57', etc.
         match = re.search(r"age\D+(\d+)", entry, flags=re.IGNORECASE)
         if match:
-            return float(match.group(1))
+            return float(match.group(1))/divisor
     
     # If no pattern found, return None
     return None
@@ -32,14 +34,14 @@ def parse_age(gsm):
 def main():
     for series_id in SERIES_NAMES:
         # Construct the path to the .soft.gz file
-        filepath = os.path.join(DATA_FOLDER, f"{series_id}_family.soft.gz")
+        filepath = DATA_FOLDER + "/" + f"{series_id}_family.soft.gz"
         
         # 1. Load GEO data using GEOparse
         print(f"Loading {series_id} from file: {filepath}")
         gse = GEOparse.get_GEO(filepath=filepath)
         
         # Create a subfolder for this series (if it doesn't exist)
-        series_subfolder = os.path.join(DATA_FOLDER, series_id)
+        series_subfolder = DATA_FOLDER + "/" + series_id
         os.makedirs(series_subfolder, exist_ok=True)
         
         # 2. For each GSM, check platform, extract methylation data, and add age
@@ -70,9 +72,15 @@ def main():
             # Set 'ID_REF' as the index for easier conversion to dict
             df = df.set_index("ID_REF")
             methylation_dict = df[col].to_dict()
+            for key, value in methylation_dict.items():
+                methylation_dict[key] = float(value) if value is not None and np.isfinite(value) and value >= 0 and value <=1 else 0.5
             
             # Parse and add age
-            age_val = parse_age(gsm)
+            age_val = parse_age(gsm) if series_id != "GSE27097" else parse_age(gsm,divisor=12)
+            if age_val is None or np.isnan(age_val):
+                print(f"Warning: No age found for {gsm_name}. Skipping.")
+                continue
+
             methylation_dict["age"] = age_val
             
             # 3. Save the dictionary as a pickle file

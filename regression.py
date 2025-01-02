@@ -5,14 +5,13 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import sys 
 
+
+from config import *
 ###############################################################################
 # Configuration
 ###############################################################################
-SERIES_NAMES = ["GSE41037", "GSE15745"]  # Add more if desired
-DATA_FOLDER = "./data"
-TEST_SIZE = 0.2
-RANDOM_STATE = 42  # For reproducible splits
 
 def main():
     # 1. Gather all pickle files and load dictionaries
@@ -30,6 +29,7 @@ def main():
             age = sample_dict.get("age", None)
             if age is None or (isinstance(age, float) and np.isnan(age)):
                 continue
+
             all_dicts.append(sample_dict)
 
     if not all_dicts:
@@ -50,8 +50,8 @@ def main():
         for j, key in enumerate(all_keys):
             val = dct[key]
             # Simple handling for missing / non-finite data
-            if val is None or not np.isfinite(val):
-                val = 0.5
+            # if val is None or not np.isfinite(val):
+            #     val = 0.5
             X_data[i, j] = val
         y_data[i] = dct["age"]
 
@@ -59,7 +59,7 @@ def main():
 
     # 4. Train-test split
     X_train, X_test, y_train, y_test = train_test_split(
-        X_data, y_data, test_size=TEST_SIZE, random_state=RANDOM_STATE
+        X_data, y_data, test_size=0.2, random_state=42
     )
 
     # 5. Fit a simple linear regression model
@@ -71,7 +71,9 @@ def main():
     # 6. Evaluate
     preds = model.predict(X_test)
     mae = np.mean(np.abs(preds - y_test))
+    median = np.median(np.abs(preds - y_test))
     print(f"[RESULT] Test MAE: {mae:.2f}")
+    print(f"[RESULT] Test Median Absolute Error: {median:.2f}")
 
     # 7. Plot a histogram of errors (pred - actual)
     errors = preds - y_test
@@ -81,6 +83,16 @@ def main():
     plt.xlabel("Error (Predicted - Actual)")
     plt.ylabel("Number of Samples")
     plt.tight_layout()
+    plt.show()
+
+
+    plt.figure()
+    plt.scatter(y_test, preds, alpha=0.5)
+    plt.xlabel("Actual Age")
+    plt.ylabel("Predicted Age")
+    plt.title("Actual vs Predicted Age")
+    plt.tight_layout()
+    plt.savefig("age_scatter_plot.png")
     plt.show()
 
 if __name__ == "__main__":

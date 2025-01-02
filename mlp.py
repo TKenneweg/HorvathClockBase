@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
 
 import matplotlib.pyplot as plt
-
+import sys
 
 from util import *
 from config import *
@@ -18,13 +18,14 @@ def main():
     dataset = MethylationDataset(SERIES_NAMES, DATA_FOLDER)
     train_size = int(TRAIN_SPLIT_RATIO * len(dataset))
     test_size = len(dataset) - train_size
+    torch.manual_seed(42)
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AgePredictorMLP(dataset.X.shape[1], HIDDEN1, HIDDEN2).to(device)
+    model = AgePredictorMLP(dataset.X.shape[1], 256, 128).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
     criterion = nn.L1Loss()
@@ -63,6 +64,7 @@ def main():
     torch.save(model, "age_predictor_mlp.pth")
     print("[INFO] Model saved to age_predictor_mlp.pth")
 
+    sys.exit()
     # Histogram of errors
     preds, ages = [], []
     model.eval()

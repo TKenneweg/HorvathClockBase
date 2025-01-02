@@ -1,18 +1,11 @@
 import os
 import pickle
+from config import *
 
-# List the series you want to check
-seriesnames = [
-    "GSE41037",
-    "GSE15745",
-    # Add more as needed
-]
-
-data_folder = "./data"
 
 def main():
-    for series_id in seriesnames:
-        series_subfolder = os.path.join(data_folder, series_id)
+    for series_id in SERIES_NAMES:
+        series_subfolder = os.path.join(DATA_FOLDER, series_id)
         
         if not os.path.isdir(series_subfolder):
             print(f"Folder not found for series '{series_id}' at {series_subfolder}")

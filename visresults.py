@@ -1,0 +1,62 @@
+import os
+import pickle
+import numpy as np
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader, random_split
+
+import matplotlib.pyplot as plt
+
+
+from util import *
+from config import *
+
+
+model = torch.load("age_predictor_mlp.pth", weights_only=False)
+device = "cuda"
+
+
+
+dataset = MethylationDataset(SERIES_NAMES, DATA_FOLDER)
+train_size = int(TRAIN_SPLIT_RATIO * len(dataset))
+test_size = len(dataset) - train_size
+torch.manual_seed(42)
+train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+print(f"Test size: {test_size}")
+
+# train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+# Histogram of errors
+preds, ages = [], []
+model.eval()
+with torch.no_grad():
+    for batch_X, batch_y in test_loader:
+        batch_X = batch_X.to(device)
+        preds.extend(model(batch_X).squeeze().cpu().numpy())
+        ages.extend(batch_y.numpy())
+errors = np.array(preds) - np.array(ages)
+# print(errors)
+median_error = np.median(abs(errors))
+average_error = np.mean(abs(errors))
+print("Median error:", median_error)
+print("Average error:", average_error)
+plt.hist(errors, bins=np.arange(-25, 25, 2.5), edgecolor='black')
+plt.axvline(x=0, color='red', linestyle='--')
+plt.title("Histogram of Prediction Errors")
+plt.xlabel("Error (Predicted - Actual)")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.savefig("age_error_histogram.png")
+plt.show()
+
+plt.figure()
+plt.scatter(ages, preds, alpha=0.5)
+plt.xlabel("Actual Age")
+plt.ylabel("Predicted Age")
+plt.title("Actual vs Predicted Age")
+plt.tight_layout()
+plt.savefig("age_scatter_plot.png")
+plt.show()
