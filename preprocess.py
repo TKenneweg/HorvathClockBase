@@ -4,19 +4,10 @@ import pickle
 import re
 
 import GEOparse
+from config import *
 
 # Uncomment to suppress verbose DEBUG messages from GEOparse:
 # logging.getLogger("GEOparse").setLevel(logging.ERROR)
-
-# List of Series IDs you want to process
-seriesnames = [
-    "GSE41037",
-    "GSE15745",
-    # Add more GSE IDs here if desired
-]
-
-# Path to your data folder
-data_folder = "./data"
 
 def parse_age(gsm):
     """
@@ -39,16 +30,16 @@ def parse_age(gsm):
 
 
 def main():
-    for series_id in seriesnames:
+    for series_id in SERIES_NAMES:
         # Construct the path to the .soft.gz file
-        filepath = os.path.join(data_folder, f"{series_id}_family.soft.gz")
+        filepath = os.path.join(DATA_FOLDER, f"{series_id}_family.soft.gz")
         
         # 1. Load GEO data using GEOparse
         print(f"Loading {series_id} from file: {filepath}")
         gse = GEOparse.get_GEO(filepath=filepath)
         
         # Create a subfolder for this series (if it doesn't exist)
-        series_subfolder = os.path.join(data_folder, series_id)
+        series_subfolder = os.path.join(DATA_FOLDER, series_id)
         os.makedirs(series_subfolder, exist_ok=True)
         
         # 2. For each GSM, check platform, extract methylation data, and add age

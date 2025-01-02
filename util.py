@@ -35,11 +35,17 @@ class MethylationDataset(Dataset):
         for i, dct in enumerate(all_dicts):
             for j, probe in enumerate(all_keys):
                 val = dct[probe]
-                X_data[i, j] = val if (val is not None and np.isfinite(val)) else 0.5
+                X_data[i, j] = val if (val is not None and np.isfinite(val) and not np.isnan(val) and val >= 0 and val <=1) else 0.5
             y_data[i] = dct["age"]
 
         self.X = torch.tensor(X_data, dtype=torch.float32)
         self.y = torch.tensor(y_data, dtype=torch.float32)
+        print(self.X.shape, self.y.shape)
+        num_nans = torch.sum(torch.isnan(self.X))
+        invalid_entries = self.X[(self.X > 1) | (self.X < 0)]
+        print(f"Invalid entries in X (greater than 1 or smaller than 0): {invalid_entries}")
+        print(f"Number of NaN entries in X: {num_nans}")
+        print(self.X,self.y)
 
     def __len__(self):
         return len(self.X)

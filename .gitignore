@@ -7,3 +7,4 @@ __pycache__/
 # You can add more ignores below if needed
 data/
 noncode/
+*.pth
