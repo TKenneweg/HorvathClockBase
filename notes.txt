@@ -11,11 +11,11 @@ Things that are working:
 - plot of regression coefficients 
 - using regularization in regression and see how many coefficients are non zero
 - application of transformation function on age data for regression
+- generation of loss graphs for mlp case.
 
 
 
 What is missing: 
-- generation of loss graphs for mlp case.
 
 
 ##########RESULTS########################

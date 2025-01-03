@@ -30,7 +30,9 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=LR)
     criterion = nn.L1Loss()
 
-    print("[INFO] Starting training...\n")
+    print("[INFO] Starting training...")
+    test_maes = []
+    test_median_errors = []
     for epoch in range(NUM_EPOCHS):
         model.train()
         total_loss = 0
@@ -54,6 +56,8 @@ def main():
                 all_errors.extend((preds - batch_y).abs().cpu().numpy())
         test_mae = total_test_loss / len(test_loader)
         median_error = float(np.median(all_errors))
+        test_maes.append(test_mae)
+        test_median_errors.append(median_error)
 
         # print(f"[Epoch {epoch+1}/{NUM_EPOCHS}] Train MAE: {train_mae:.4f}, Test MAE: {test_mae:.4f}")
         print(f"[Epoch {epoch+1:02d}/{NUM_EPOCHS}] "
@@ -64,24 +68,17 @@ def main():
     torch.save(model, "age_predictor_mlp.pth")
     print("[INFO] Model saved to age_predictor_mlp.pth")
 
-    sys.exit()
-    # Histogram of errors
-    preds, ages = [], []
-    model.eval()
-    with torch.no_grad():
-        for batch_X, batch_y in test_loader:
-            batch_X = batch_X.to(device)
-            preds.extend(model(batch_X).squeeze().cpu().numpy())
-            ages.extend(batch_y.numpy())
-    errors = np.array(preds) - np.array(ages)
-    plt.hist(errors, bins=np.arange(-25, 25, 2.5), edgecolor='black')
-    plt.axvline(x=0, color='red', linestyle='--')
-    plt.title("Histogram of Prediction Errors")
-    plt.xlabel("Error (Predicted - Actual)")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    plt.savefig("age_error_histogram.png")
+    plt.figure(figsize=(10, 5))
+    plt.plot(range(1, NUM_EPOCHS + 1), test_maes, label='Test MAE')
+    plt.plot(range(1, NUM_EPOCHS + 1), test_median_errors, label='Test Median Error')
+    plt.xlabel('Epoch')
+    plt.ylabel('Error')
+    plt.title('Test MAE and Median Error over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("training_metrics.png")
     plt.show()
+
 
 ###############################################################################
 # 5. Entry Point
