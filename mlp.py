@@ -28,6 +28,7 @@ def main():
     model = AgePredictorMLP(dataset.X.shape[1], 256, 128).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
     criterion = nn.L1Loss()
 
     print("[INFO] Starting training...")
@@ -44,6 +45,7 @@ def main():
             optimizer.step()
             total_loss += loss.item()
         train_mae = total_loss / len(train_loader)
+        scheduler.step()
 
         model.eval()
         total_test_loss = 0
@@ -59,7 +61,6 @@ def main():
         test_maes.append(test_mae)
         test_median_errors.append(median_error)
 
-        # print(f"[Epoch {epoch+1}/{NUM_EPOCHS}] Train MAE: {train_mae:.4f}, Test MAE: {test_mae:.4f}")
         print(f"[Epoch {epoch+1:02d}/{NUM_EPOCHS}] "
               f"Train MAE: {train_mae:.4f}, "
               f"Test MAE: {test_mae:.4f}, "
