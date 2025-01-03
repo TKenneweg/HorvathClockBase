@@ -10,10 +10,28 @@ Things that are working:
 - visualization of results as scatter plot and histogram
 - plot of regression coefficients 
 - using regularization in regression and see how many coefficients are non zero
+- application of transformation function on age data for regression
 
 
 
 What is missing: 
-- Calculation of horvaths results on test data
-- application of transformation function on age data for regression
 - generation of loss graphs for mlp case.
+
+
+##########RESULTS########################
+
+with transform fucntion
+[RESULT] Train MAE: 0.97
+[RESULT] Train Median Absolute Error: 0.60
+[RESULT] Test MAE: 3.75
+[RESULT] Test Median Absolute Error: 2.67
+
+without transform fucntion 
+[RESULT] Train MAE: 1.01
+[RESULT] Train Median Absolute Error: 0.63
+[RESULT] Test MAE: 3.92
+[RESULT] Test Median Absolute Error: 3.10
+
+mlp: 
+Average error: 3.7079368
+Median error: 2.8554168

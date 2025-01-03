@@ -21,16 +21,20 @@ def main():
     X_data = dataset.X.numpy()
     y_data = dataset.y.numpy()
 
-
     X_train, X_test, y_train, y_test = train_test_split(
         X_data, y_data, test_size=0.2, random_state=42
     )
 
     model = LinearRegression()
-    # model = Lasso(alpha=5e-2)
+    # model = Lasso(alpha=1e-2)
     # model = Ridge(alpha=5e3)
     # model = ElasticNet(alpha=0.022, l1_ratio=0.5)
+
+
     model.fit(X_train, y_train)
+    # model.fit(X_train, calibFunction(y_train))
+
+
     # Print model parameters
     print("Model coefficients:", model.coef_)
     print("Model intercept:", model.intercept_)
@@ -46,12 +50,14 @@ def main():
     plt.show()
 
     predstrain = model.predict(X_train)
+    # predstrain = inverseCalibFunction(model.predict(X_train))
     maetrain = np.mean(np.abs(predstrain - y_train))
     mediantrain = np.median(np.abs(predstrain - y_train))
     print(f"[RESULT] Train MAE: {maetrain:.2f}")
     print(f"[RESULT] Train Median Absolute Error: {mediantrain:.2f}")
     
     preds = model.predict(X_test)
+    # preds = inverseCalibFunction(model.predict(X_test))
     mae = np.mean(np.abs(preds - y_test))
     median = np.median(np.abs(preds - y_test))
     print(f"[RESULT] Test MAE: {mae:.2f}")

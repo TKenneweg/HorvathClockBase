@@ -14,19 +14,18 @@ from util import *
 from config import *
 
 
-model = torch.load("age_predictor_mlp.pth", weights_only=False)
+torch.manual_seed(42)
 device = "cuda"
 
 
 
+model = torch.load("age_predictor_mlp.pth", weights_only=False)
 dataset = MethylationDataset(SERIES_NAMES, DATA_FOLDER)
 train_size = int(TRAIN_SPLIT_RATIO * len(dataset))
 test_size = len(dataset) - train_size
-torch.manual_seed(42)
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 print(f"Test size: {test_size}")
 
-# train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Histogram of errors
@@ -39,10 +38,12 @@ with torch.no_grad():
         ages.extend(batch_y.numpy())
 errors = np.array(preds) - np.array(ages)
 # print(errors)
-median_error = np.median(abs(errors))
 average_error = np.mean(abs(errors))
-print("Median error:", median_error)
+median_error = np.median(abs(errors))
 print("Average error:", average_error)
+print("Median error:", median_error)
+
+
 plt.hist(errors, bins=np.arange(-25, 25, 2.5), edgecolor='black')
 plt.axvline(x=0, color='red', linestyle='--')
 plt.title("Histogram of Prediction Errors")
