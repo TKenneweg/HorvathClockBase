@@ -61,3 +61,12 @@ class AgePredictorMLP(nn.Module):
         x = torch.nn.functional.leaky_relu(self.fc1(x))
         x = torch.nn.functional.leaky_relu(self.fc2(x))
         return self.fc3(x)
+    
+
+    # Define the transformation function F(age)
+def calibFunction(age):
+    adult_age = 20
+    if age <= adult_age:
+        return np.log(age + 1) - np.log(adult_age + 1)
+    else:
+        return (age - adult_age) / (adult_age + 1)

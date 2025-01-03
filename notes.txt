@@ -1,0 +1,19 @@
+Things that are working: 
+- Identification of relevant data
+- Downloading of raw data
+- Preprocessing of raw data into pickeld pytorch tensors 
+- Fast Pytorch dataset creation from these tensors
+- MLP Training with this data with reasonable results 
+- Calculation of horvaths results on train data
+- Simple linear regression of methylation data without regularization
+- visualization of transformation function 
+- visualization of results as scatter plot and histogram
+- plot of regression coefficients 
+- using regularization in regression and see how many coefficients are non zero
+
+
+
+What is missing: 
+- Calculation of horvaths results on test data
+- application of transformation function on age data for regression
+- generation of loss graphs for mlp case.
