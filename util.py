@@ -24,7 +24,7 @@ class MethylationDataset(Dataset):
             series_subfolder = data_folder + "/" + series_id
             pkl_files = [f for f in os.listdir(series_subfolder) if f.endswith(".pkl")]
             for pkl_file in pkl_files:
-                with open(os.path.join(series_subfolder, pkl_file), "rb") as f:
+                with open(series_subfolder + "/" + pkl_file, "rb") as f:
                     sample_dict = pickle.load(f)
                     X_data[i,:] = list(sample_dict.values())[:-1]
                     y_data[i] = sample_dict["age"]

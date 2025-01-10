@@ -49,13 +49,6 @@ def main():
     plt.savefig("coefficients_scatter_plot.png")
     plt.show()
 
-    predstrain = model.predict(X_train)
-    # predstrain = inverseCalibFunction(model.predict(X_train))
-    maetrain = np.mean(np.abs(predstrain - y_train))
-    mediantrain = np.median(np.abs(predstrain - y_train))
-    print(f"[RESULT] Train MAE: {maetrain:.2f}")
-    print(f"[RESULT] Train Median Absolute Error: {mediantrain:.2f}")
-    
     preds = model.predict(X_test)
     # preds = inverseCalibFunction(model.predict(X_test))
     mae = np.mean(np.abs(preds - y_test))
