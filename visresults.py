@@ -10,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import matplotlib.pyplot as plt
 
 
-from util import *
+from mlp import *
 from config import *
 
 

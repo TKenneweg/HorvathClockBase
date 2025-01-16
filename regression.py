@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import sys 
 from util import *
+from mlp import MethylationDataset, AgePredictorMLP
 
 from config import *
 from sklearn.linear_model import Ridge
@@ -18,28 +19,49 @@ from sklearn.linear_model import ElasticNet
 
 def main():
     dataset = MethylationDataset(SERIES_NAMES, DATA_FOLDER)
+
+    train_indices = np.load("train_indices.npy", allow_pickle=True)
+    test_indices = np.load("test_indices.npy", allow_pickle=True)
     X_data = dataset.X.numpy()
     y_data = dataset.y.numpy()
+    X_train = X_data[train_indices]
+    y_train = y_data[train_indices]
+    X_test = X_data[test_indices]
+    y_test = y_data[test_indices]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_data, y_data, test_size=0.2, random_state=42
-    )
 
     model = LinearRegression()
     # model = Lasso(alpha=1e-2)
-    # model = Ridge(alpha=5e3)
+    # model = Ridge(alpha=5e2)
     # model = ElasticNet(alpha=0.022, l1_ratio=0.5)
 
 
     model.fit(X_train, y_train)
-    # model.fit(X_train, calibFunction(y_train))
+
+
+
+    preds = model.predict(X_test)
+    mae = np.mean(np.abs(preds - y_test))
+    median = np.median(np.abs(preds - y_test))
+    print(f"[RESULT] Test MAE: {mae:.2f}")
+    print(f"[RESULT] Test Median Absolute Error: {median:.2f}")
+    
+
+    plt.figure()
+    plt.scatter(y_test, preds, alpha=0.5)
+    plt.xlabel("Actual Age")
+    plt.ylabel("Predicted Age")
+    plt.title("Actual vs Predicted Age")
+    plt.tight_layout()
+    plt.savefig("age_scatter_plot.png")
+    plt.show()
 
 
     # Print model parameters
+    print("\n#####################################\n")
     print("Model coefficients:", model.coef_)
-    print("Model intercept:", model.intercept_)
-    num_large_coeffs = np.sum(np.abs(model.coef_) > 0.01)
-    print(f"Number of coefficients larger than 0.01: {num_large_coeffs}")
+    num_large_coeffs = np.sum(np.abs(model.coef_) > 0)
+    print(f"Number of coefficients larger than 0: {num_large_coeffs}")
     plt.figure()
     plt.scatter(range(len(model.coef_)), model.coef_, alpha=0.5)
     plt.xlabel("Coefficient Index")
@@ -49,24 +71,6 @@ def main():
     plt.savefig("coefficients_scatter_plot.png")
     plt.show()
 
-    preds = model.predict(X_test)
-    # preds = inverseCalibFunction(model.predict(X_test))
-    mae = np.mean(np.abs(preds - y_test))
-    median = np.median(np.abs(preds - y_test))
-    print(f"[RESULT] Test MAE: {mae:.2f}")
-    print(f"[RESULT] Test Median Absolute Error: {median:.2f}")
-    
-
-
-    plt.figure()
-    # plt.scatter(y_train, predstrain, alpha=0.5)
-    plt.scatter(y_test, preds, alpha=0.5)
-    plt.xlabel("Actual Age")
-    plt.ylabel("Predicted Age")
-    plt.title("Actual vs Predicted Age")
-    plt.tight_layout()
-    plt.savefig("age_scatter_plot.png")
-    plt.show()
 
 if __name__ == "__main__":
     main()

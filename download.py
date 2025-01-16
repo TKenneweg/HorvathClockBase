@@ -1,7 +1,8 @@
 import GEOparse
-from config import *
 import os
-SERIES_NAMES = ["GSE41037", "GSE15745", "GSE27317", "GSE27097", "GSE34035"]
+
+DATA_FOLDER = "./data"
+SERIES_NAMES = ["GSE41037", "GSE15745", "GSE27097", "GSE34035"]
 
 
 for s in SERIES_NAMES:
@@ -12,4 +13,3 @@ for s in SERIES_NAMES:
         print(f"File {file_path} already exists. Skipping download.")
 
 
-# gse = GEOparse.get_GEO(filepath=filepath)
