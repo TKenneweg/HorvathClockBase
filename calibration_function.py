@@ -1,6 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from util import *
+
+
+def calibFunction(age):
+    """Vectorized version of the transformation function F(age). 
+    Works on scalars or NumPy arrays."""
+    adult_age = 20
+    age = np.asarray(age, dtype=float)  # Ensure array for vectorized ops
+    
+    # For entries <= adult_age, use log(age + 1) - log(21).
+    # For entries > adult_age, use (age - 20) / 21.
+    return np.where(
+        age <= adult_age,
+        np.log(age + 1) - np.log(adult_age + 1),
+        (age - adult_age) / (adult_age + 1)
+    )
+
+
+
 # Define the adult age threshold
 adult_age = 20
 

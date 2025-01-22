@@ -10,9 +10,15 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import matplotlib.pyplot as plt
 import sys
 
-from util import *
 from config import *
 
+
+#The Plan 
+#Create a pytorch dataset
+#Create a 3 layer mlp
+#create optimizers and loss function 
+#run a standard training loop
+#visualize the results
 
 class MethylationDataset(Dataset):
     def __init__(self, series_names, data_folder):
@@ -80,55 +86,57 @@ def main():
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
-    criterion = nn.L1Loss()
+    criterion = nn.L1Loss() #absolute error
 
     print("[INFO] Starting training...")
-    test_maes = []
-    test_median_errors = []
+    test_errors = [] #for plotting
+    test_median_errors = [] #for plotting
     for epoch in range(NUM_EPOCHS):
         model.train()
-        total_loss = 0
+        total_train_loss = 0
         for batch_X, batch_y in train_loader:
             batch_X, batch_y = batch_X.to(device), batch_y.to(device)
-            optimizer.zero_grad()
             loss = criterion(model(batch_X).squeeze(), batch_y)
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
-        train_mae = total_loss / len(train_loader)
+            total_train_loss += loss.item() * batch_X.shape[0]
         scheduler.step()
+        train_error = total_train_loss / len(train_dataset)
 
         model.eval()
         total_test_loss = 0
-        all_errors = []
-        plotpreds, ages = [], []
+        all_errors,ages, predicted_ages = [],[],[]
         with torch.no_grad():
             for batch_X, batch_y in test_loader:
                 batch_X, batch_y = batch_X.to(device), batch_y.to(device)
                 preds = model(batch_X).squeeze()
-                total_test_loss += criterion(preds, batch_y).item()
+
+                total_test_loss += criterion(preds, batch_y).item() * batch_X.shape[0]
                 all_errors.extend((preds - batch_y).abs().cpu().numpy())
-                plotpreds.extend(model(batch_X).squeeze().cpu().numpy())
+                predicted_ages.extend(preds.cpu().numpy())
                 ages.extend(batch_y.cpu().numpy())
-        test_mae = total_test_loss / len(test_loader)
-        median_error = float(np.median(all_errors))
-        test_maes.append(test_mae)
-        test_median_errors.append(median_error)
+
+        test_error = total_test_loss / len(test_dataset)
+        test_median_error = float(np.median(all_errors))
+
+        test_errors.append(test_error)
+        test_median_errors.append(test_median_error)
 
         print(f"[Epoch {epoch+1:02d}/{NUM_EPOCHS}] "
-              f"Train MAE: {train_mae:.4f}, "
-              f"Test MAE: {test_mae:.4f}, "
-              f"Test Median Error: {median_error:.4f}")
+              f"Train Error: {train_error:.4f}, "
+              f"Test Error: {test_error:.4f}, "
+              f"Test Median Error: {test_median_error:.4f}")
 
     torch.save(model, "age_predictor_mlp.pth")
     print("[INFO] Model saved to age_predictor_mlp.pth")
 
     plt.figure(figsize=(10, 5))
-    plt.plot(range(1, NUM_EPOCHS + 1), test_maes, label='Test MAE')
+    plt.plot(range(1, NUM_EPOCHS + 1), test_errors, label='Test MAE')
     plt.plot(range(1, NUM_EPOCHS + 1), test_median_errors, label='Test Median Error')
     plt.xlabel('Epoch')
     plt.ylabel('Error')
-    plt.title('Test MAE and Median Error over Epochs')
+    plt.title('Test Error (Absolute) and Median Error over Epochs')
     plt.legend()
     plt.grid(True)
     plt.savefig("training_metrics.png")
@@ -136,7 +144,7 @@ def main():
 
 
     plt.figure()
-    plt.scatter(ages, plotpreds, alpha=0.5)
+    plt.scatter(ages, predicted_ages, alpha=0.5)
     plt.xlabel("Actual Age")
     plt.ylabel("Predicted Age")
     plt.title("Actual vs Predicted Age")

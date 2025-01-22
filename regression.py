@@ -6,7 +6,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import sys 
-from util import *
 from mlp import MethylationDataset, AgePredictorMLP
 
 from config import *
@@ -31,9 +30,9 @@ def main():
 
 
     model = LinearRegression()
-    # model = Lasso(alpha=1e-2)
-    # model = Ridge(alpha=5e2)
-    # model = ElasticNet(alpha=0.022, l1_ratio=0.5)
+    # model = Lasso(alpha=1e-2) #linear regression with L1 regularization
+    # model = Ridge(alpha=5e2) #linear regression with L2 regularization
+    # model = ElasticNet(alpha=0.022, l1_ratio=0.5) #linear regression with L1 and L2 regularization
 
 
     model.fit(X_train, y_train)
